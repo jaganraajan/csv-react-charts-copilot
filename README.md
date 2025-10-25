@@ -1,11 +1,16 @@
 # csv-react-charts-copilot
 
-A full-stack application featuring a React frontend with CSV data visualization and an AI-powered chatbot, backed by a Python FastAPI server with Azure OpenAI integration.
+A full-stack application featuring a React frontend with CSV data visualization and an AI-powered chatbot with LangGraph agent, backed by a Python FastAPI server with Azure OpenAI integration.
 
 ## Features
 
 - **📊 CSV Data Visualization**: Upload CSV files and visualize them with interactive charts
-- **💬 AI Chatbot**: Chat with an AI assistant powered by Azure OpenAI
+- **🤖 AI Chatbot with LangGraph Agent**: Intelligent CSV analysis assistant powered by Azure OpenAI
+- **🔧 Three CSV Analysis Tools**:
+  - `read_csv_tool`: Read and display CSV metadata (shape, columns, preview)
+  - `analyze_csv_column`: Detailed statistics for numeric and categorical columns
+  - `query_csv_data`: Natural language queries (count rows, list columns, summary stats, etc.)
+- **📤 CSV File Upload**: Upload your own CSV files for analysis directly in the chatbot
 - **📈 Multiple Chart Types**: Switch between line and bar charts
 - **🎨 Modern UI**: Clean, responsive design with gradient styling
 - **⚡ Fast Development**: Vite for frontend, FastAPI for backend
@@ -17,7 +22,7 @@ A full-stack application featuring a React frontend with CSV data visualization 
 ├── frontend/          # React + TypeScript + Vite application
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── Chatbot.tsx        # AI chatbot component
+│   │   │   ├── Chatbot.tsx        # AI chatbot with file upload
 │   │   │   ├── Chatbot.css
 │   │   │   ├── ChartPanel.tsx     # CSV upload & chart display
 │   │   │   └── ChartPanel.css
@@ -28,7 +33,9 @@ A full-stack application featuring a React frontend with CSV data visualization 
 │   └── package.json
 │
 └── backend/           # Python FastAPI server
-    ├── main.py        # FastAPI application with Azure OpenAI
+    ├── main.py        # FastAPI application with LangGraph agent
+    ├── csv_agent.py   # LangGraph agent with CSV tools
+    ├── demo_data.csv  # Demo CSV file for testing
     ├── requirements.txt
     └── .env.example
 ```
@@ -106,12 +113,40 @@ A full-stack application featuring a React frontend with CSV data visualization 
 
 ## Usage
 
-### Chatbot
-- Type your question in the chat input at the bottom of the left sidebar
-- Press "Send" or hit Enter to submit
-- The AI assistant will respond using Azure OpenAI
+### CSV Analysis Chatbot with LangGraph Agent
 
-### CSV Upload & Visualization
+The chatbot now features an intelligent agent that can analyze CSV files using three specialized tools:
+
+#### Getting Started
+1. **Upload a CSV file** (optional):
+   - Click the "📄 Upload CSV File" button in the chatbot header
+   - Select a CSV file from your computer
+   - Or use the included `backend/demo_data.csv` file automatically
+
+2. **Ask questions about your data**:
+   - "Show me the CSV data" - See file info and preview
+   - "Analyze the price column" - Get detailed statistics
+   - "How many rows are there?" - Count rows
+   - "What's the average revenue?" - Calculate aggregates
+   - "List all columns" - See column names
+   - "Show unique values in category" - Get distinct values
+
+#### Available Tools
+
+1. **read_csv_tool**: Displays CSV shape, column names, and first 5 rows
+2. **analyze_csv_column**: Provides statistics for any column
+   - Numeric: mean, std, min, quartiles, max, missing values
+   - Categorical: unique values, value counts, missing values
+3. **query_csv_data**: Handles natural language queries for common operations
+
+#### Agent Flow
+```
+User Query → LangGraph Agent → Tool Selection → Tool Execution → Agent Response
+```
+
+The agent automatically decides which tool(s) to use based on your question, executes them, and provides a natural language response.
+
+### CSV Upload & Visualization (Chart Panel)
 - Click "Choose CSV File" in the right panel
 - Select a CSV file from your computer (you can use `sample-data.csv` included in the repository)
 - The chart will automatically update with your data
@@ -130,11 +165,15 @@ March,5200,4100,3500
 
 ### Backend API
 
-- `GET /` - Root endpoint
-- `GET /health` - Health check endpoint
-- `POST /api/chat` - Chat with AI assistant
+- `GET /` - Root endpoint (returns API status)
+- `GET /health` - Health check endpoint (shows agent configuration status)
+- `POST /api/upload-csv` - Upload CSV file for analysis
+  - Accepts: multipart/form-data with `file` field
+  - Response: `{ "message": "success message", "filename": "uploaded_file.csv" }`
+- `POST /api/chat` - Chat with LangGraph AI agent
   - Request body: `{ "message": "your question" }`
-  - Response: `{ "response": "AI response" }`
+  - Response: `{ "response": "AI agent response" }`
+  - The agent automatically uses uploaded CSV or demo data
 
 ## Technologies Used
 
@@ -148,7 +187,10 @@ March,5200,4100,3500
 ### Backend
 - **FastAPI** for the web framework
 - **Uvicorn** as ASGI server
-- **Azure OpenAI** for AI capabilities
+- **LangGraph** for building the AI agent with StateGraph pattern
+- **LangChain** for tool binding and Azure OpenAI integration
+- **Azure OpenAI** for LLM capabilities
+- **Pandas** for CSV data analysis
 - **Pydantic** for data validation
 - **Python-dotenv** for environment management
 

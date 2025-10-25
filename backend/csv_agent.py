@@ -5,7 +5,7 @@ This module implements a minimal agent using LangGraph's StateGraph pattern
 that integrates Azure OpenAI LLM with tool binding for CSV file operations.
 """
 
-from typing import TypedDict, Annotated, Sequence
+from typing import TypedDict, Annotated, Sequence, Optional
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMessage
 from langchain_openai import AzureChatOpenAI
 from langchain_core.tools import tool
@@ -29,18 +29,18 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 
 
 @tool
-def read_csv_tool(file_path: str = None) -> str:
+def read_csv_tool(file_path: Optional[str] = "") -> str:
     """
     Reads CSV file and returns shape, column names, and first 5 rows.
     
     Args:
-        file_path: Path to the CSV file. If None, uses the default demo file.
+        file_path: Path to the CSV file. If empty or not provided, uses the default demo file.
     
     Returns:
         String containing CSV metadata and preview.
     """
     try:
-        if file_path is None or not os.path.exists(file_path):
+        if not file_path or not os.path.exists(file_path):
             # Use demo file
             file_path = os.path.join(os.path.dirname(__file__), "demo_data.csv")
         
@@ -57,7 +57,7 @@ def read_csv_tool(file_path: str = None) -> str:
 
 
 @tool
-def analyze_csv_column(column_name: str, file_path: str = None) -> str:
+def analyze_csv_column(column_name: str, file_path: Optional[str] = "") -> str:
     """
     Provides detailed statistics for a specific column in the CSV file.
     
@@ -66,13 +66,13 @@ def analyze_csv_column(column_name: str, file_path: str = None) -> str:
     
     Args:
         column_name: Name of the column to analyze
-        file_path: Path to the CSV file. If None, uses the default demo file.
+        file_path: Path to the CSV file. If empty or not provided, uses the default demo file.
     
     Returns:
         String containing detailed column statistics.
     """
     try:
-        if file_path is None or not os.path.exists(file_path):
+        if not file_path or not os.path.exists(file_path):
             file_path = os.path.join(os.path.dirname(__file__), "demo_data.csv")
         
         df = pd.read_csv(file_path)
@@ -116,7 +116,7 @@ def analyze_csv_column(column_name: str, file_path: str = None) -> str:
 
 
 @tool
-def query_csv_data(query: str, file_path: str = None) -> str:
+def query_csv_data(query: str, file_path: Optional[str] = "") -> str:
     """
     Handles natural language queries for common CSV operations.
     
@@ -129,13 +129,13 @@ def query_csv_data(query: str, file_path: str = None) -> str:
     
     Args:
         query: Natural language query about the CSV data
-        file_path: Path to the CSV file. If None, uses the default demo file.
+        file_path: Path to the CSV file. If empty or not provided, uses the default demo file.
     
     Returns:
         String containing the query result.
     """
     try:
-        if file_path is None or not os.path.exists(file_path):
+        if not file_path or not os.path.exists(file_path):
             file_path = os.path.join(os.path.dirname(__file__), "demo_data.csv")
         
         df = pd.read_csv(file_path)
