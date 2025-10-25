@@ -113,10 +113,18 @@ A full-stack application featuring a React frontend with CSV data visualization 
 
 ### CSV Upload & Visualization
 - Click "Choose CSV File" in the right panel
-- Select a CSV file from your computer
+- Select a CSV file from your computer (you can use `sample-data.csv` included in the repository)
 - The chart will automatically update with your data
 - Switch between line and bar chart views using the chart type buttons
 - If no file is uploaded, a demo chart with sample data is displayed
+
+**Sample CSV Format:**
+```csv
+month,sales,revenue,profit
+January,4500,3200,2800
+February,3800,2900,2400
+March,5200,4100,3500
+```
 
 ## API Endpoints
 
