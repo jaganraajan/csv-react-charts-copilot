@@ -61,12 +61,15 @@ try:
                 # Set host environment variable for Langfuse client
                 os.environ["LANGFUSE_HOST"] = langfuse_host
                 
-                # Initialize CallbackHandler (credentials read from env vars)
+                # Initialize CallbackHandler
+                # Note: public_key can be passed explicitly or read from LANGFUSE_PUBLIC_KEY env var
+                # secret_key is always read from LANGFUSE_SECRET_KEY env var in v3
                 langfuse_handler = CallbackHandler(
                     public_key=langfuse_public_key,
                     update_trace=True  # Include chain details in traces
                 )
                 print("✓ Langfuse initialized successfully - tracing enabled")
+                print(f"  Using Langfuse host: {langfuse_host}")
             except Exception as e:
                 print(f"⚠ Langfuse initialization failed: {e} - tracing disabled")
                 langfuse_handler = None
