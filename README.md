@@ -12,6 +12,7 @@ A full-stack application featuring a React frontend with CSV data visualization 
   - `query_csv_data`: Natural language queries (count rows, list columns, summary stats, etc.)
 - **📤 CSV File Upload**: Upload your own CSV files for analysis directly in the chatbot
 - **📈 Multiple Chart Types**: Switch between line and bar charts
+- **🔍 Langfuse Integration**: Optional agent tracing and observability for debugging and monitoring
 - **🎨 Modern UI**: Clean, responsive design with gradient styling
 - **⚡ Fast Development**: Vite for frontend, FastAPI for backend
 
@@ -45,6 +46,7 @@ A full-stack application featuring a React frontend with CSV data visualization 
 - **Node.js** 18+ and npm
 - **Python** 3.8+
 - **Azure OpenAI** account with API access
+- **Langfuse** account (optional, for tracing and observability)
 
 ## Setup Instructions
 
@@ -78,7 +80,19 @@ A full-stack application featuring a React frontend with CSV data visualization 
    AZURE_OPENAI_DEPLOYMENT_NAME=your-deployment-name
    ```
 
-6. Run the backend server:
+6. (Optional) Configure Langfuse for agent tracing in `.env`:
+   ```env
+   LANGFUSE_PUBLIC_KEY=pk-lf-your-public-key-here
+   LANGFUSE_SECRET_KEY=sk-lf-your-secret-key-here
+   LANGFUSE_HOST=https://cloud.langfuse.com
+   ```
+   
+   To get Langfuse credentials:
+   - Sign up at [cloud.langfuse.com](https://cloud.langfuse.com)
+   - Create a new project
+   - Copy your API keys from the project settings
+
+7. Run the backend server:
    ```bash
    python main.py
    # or
@@ -146,6 +160,28 @@ User Query → LangGraph Agent → Tool Selection → Tool Execution → Agent R
 
 The agent automatically decides which tool(s) to use based on your question, executes them, and provides a natural language response.
 
+#### Langfuse Tracing (Optional)
+
+When Langfuse is configured, the application provides complete observability of the agent graph flow:
+
+- **Trace every agent execution**: See the full conversation flow with tool calls
+- **Monitor performance**: Track latency and token usage for each step
+- **Debug issues**: View detailed logs of tool invocations and responses
+- **Analyze patterns**: Understand how users interact with the CSV agent
+
+To view traces:
+1. Configure Langfuse credentials in `.env` (see Backend Setup step 6)
+2. Run the application and interact with the chatbot
+3. Visit your Langfuse dashboard at [cloud.langfuse.com](https://cloud.langfuse.com)
+4. View detailed traces, including:
+   - User queries
+   - Agent decisions
+   - Tool invocations and results
+   - Final responses
+   - Timing and token metrics
+
+The agent graph flow is automatically tracked without any code changes required!
+
 ### CSV Upload & Visualization (Chart Panel)
 - Click "Choose CSV File" in the right panel
 - Select a CSV file from your computer (you can use `sample-data.csv` included in the repository)
@@ -166,7 +202,7 @@ March,5200,4100,3500
 ### Backend API
 
 - `GET /` - Root endpoint (returns API status)
-- `GET /health` - Health check endpoint (shows agent configuration status)
+- `GET /health` - Health check endpoint (shows agent configuration status and Langfuse status)
 - `POST /api/upload-csv` - Upload CSV file for analysis
   - Accepts: multipart/form-data with `file` field
   - Response: `{ "message": "success message", "filename": "uploaded_file.csv" }`
@@ -174,6 +210,7 @@ March,5200,4100,3500
   - Request body: `{ "message": "your question" }`
   - Response: `{ "response": "AI agent response" }`
   - The agent automatically uses uploaded CSV or demo data
+  - All interactions are traced in Langfuse if configured
 
 ## Technologies Used
 
@@ -189,6 +226,7 @@ March,5200,4100,3500
 - **Uvicorn** as ASGI server
 - **LangGraph** for building the AI agent with StateGraph pattern
 - **LangChain** for tool binding and Azure OpenAI integration
+- **Langfuse** for agent tracing and observability (optional)
 - **Azure OpenAI** for LLM capabilities
 - **Pandas** for CSV data analysis
 - **Pydantic** for data validation
@@ -216,9 +254,15 @@ uvicorn main:app --reload        # Run with uvicorn
 ## Environment Variables
 
 ### Backend (.env)
+**Required:**
 - `AZURE_OPENAI_ENDPOINT` - Your Azure OpenAI endpoint URL
 - `AZURE_OPENAI_API_KEY` - Your Azure OpenAI API key
 - `AZURE_OPENAI_DEPLOYMENT_NAME` - Your Azure OpenAI deployment name
+
+**Optional (for Langfuse tracing):**
+- `LANGFUSE_PUBLIC_KEY` - Your Langfuse public key (from cloud.langfuse.com)
+- `LANGFUSE_SECRET_KEY` - Your Langfuse secret key
+- `LANGFUSE_HOST` - Langfuse host URL (default: https://cloud.langfuse.com)
 
 ### Frontend (.env)
 - `VITE_API_URL` - Backend API URL (default: http://localhost:8000)

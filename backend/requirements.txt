@@ -8,4 +8,6 @@ pydantic-settings==2.6.0
 langgraph==1.0.1
 langchain-core==1.0.1
 langchain-openai==1.0.1
+langchain>=0.1.0
 pandas==2.3.3
+langfuse>=2.0.0

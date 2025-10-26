@@ -3,9 +3,10 @@ CSV Agent using LangGraph with Azure OpenAI and tool binding.
 
 This module implements a minimal agent using LangGraph's StateGraph pattern
 that integrates Azure OpenAI LLM with tool binding for CSV file operations.
+Includes Langfuse integration for tracing and observability.
 """
 
-from typing import TypedDict, Annotated, Sequence
+from typing import TypedDict, Annotated, Sequence, Optional
 from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMessage, SystemMessage
 from langchain_openai import AzureChatOpenAI
 from langchain_core.tools import tool
@@ -14,6 +15,14 @@ from langgraph.prebuilt import ToolNode
 import pandas as pd
 import os
 from pathlib import Path
+
+# Langfuse imports (optional, only if configured)
+try:
+    from langfuse.langchain import CallbackHandler
+    LANGFUSE_AVAILABLE = True
+except ImportError:
+    LANGFUSE_AVAILABLE = False
+    CallbackHandler = None
 
 
 # Define the agent state
@@ -213,9 +222,12 @@ def query_csv_data(query: str, file_path: str = "") -> str:
 tools = [read_csv_tool, analyze_csv_column, query_csv_data]
 
 
-def create_agent():
+def create_agent(langfuse_handler: Optional[CallbackHandler] = None):
     """
     Creates and returns a LangGraph agent with CSV tools.
+    
+    Args:
+        langfuse_handler: Optional Langfuse callback handler for tracing
     
     Returns:
         Compiled LangGraph agent
@@ -255,7 +267,15 @@ def create_agent():
         else:
             messages_with_system = list(messages)
 
-        response = llm_with_tools.invoke(messages_with_system)
+        # Invoke with callback handler if available
+        if langfuse_handler:
+            response = llm_with_tools.invoke(
+                messages_with_system, 
+                config={"callbacks": [langfuse_handler]}
+            )
+        else:
+            response = llm_with_tools.invoke(messages_with_system)
+        
         return {"messages": messages + [response], "csv_file_path": csv_file_path}
     
     # Define the routing function

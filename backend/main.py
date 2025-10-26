@@ -7,6 +7,14 @@ from pathlib import Path
 from csv_agent import create_agent, run_agent
 from openai import AzureOpenAI
 
+# Langfuse imports (optional)
+try:
+    from langfuse.langchain import CallbackHandler
+    LANGFUSE_AVAILABLE = True
+except ImportError:
+    LANGFUSE_AVAILABLE = False
+    CallbackHandler = None
+
 load_dotenv()
 
 app = FastAPI(title="CSV Charts Chatbot API")
@@ -28,6 +36,8 @@ current_csv_file = None
 # Initialize LangGraph agent
 agent = None
 client = None
+langfuse_handler = None
+
 try:
     azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
     azure_api_key = os.getenv("AZURE_OPENAI_API_KEY")
@@ -39,8 +49,37 @@ try:
         api_key=azure_api_key,
         api_version=azure_api_version
     )
-    # Setup agent using create_agent
-    agent = create_agent()
+    
+    # Initialize Langfuse if credentials are available
+    if LANGFUSE_AVAILABLE:
+        langfuse_public_key = os.getenv("LANGFUSE_PUBLIC_KEY")
+        langfuse_secret_key = os.getenv("LANGFUSE_SECRET_KEY")
+        langfuse_host = os.getenv("LANGFUSE_HOST", "https://cloud.langfuse.com")
+        
+        if langfuse_public_key and langfuse_secret_key:
+            try:
+                # Set host environment variable for Langfuse client
+                os.environ["LANGFUSE_HOST"] = langfuse_host
+                
+                # Initialize CallbackHandler
+                # Note: public_key can be passed explicitly or read from LANGFUSE_PUBLIC_KEY env var
+                # secret_key is always read from LANGFUSE_SECRET_KEY env var in v3
+                langfuse_handler = CallbackHandler(
+                    public_key=langfuse_public_key,
+                    update_trace=True  # Include chain details in traces
+                )
+                print("✓ Langfuse initialized successfully - tracing enabled")
+                print(f"  Using Langfuse host: {langfuse_host}")
+            except Exception as e:
+                print(f"⚠ Langfuse initialization failed: {e} - tracing disabled")
+                langfuse_handler = None
+        else:
+            print("ℹ Langfuse credentials not configured - tracing disabled")
+    else:
+        print("ℹ Langfuse package not installed - tracing disabled")
+    
+    # Setup agent using create_agent with optional Langfuse handler
+    agent = create_agent(langfuse_handler)
 except Exception as e:
     print(f"Warning: Agent initialization failed: {e}")
 
@@ -63,7 +102,8 @@ async def health_check():
     return {
         "status": "healthy",
         "agent_configured": agent is not None,
-        "current_csv_file": current_csv_file
+        "current_csv_file": current_csv_file,
+        "langfuse_enabled": langfuse_handler is not None
     }
 
 @app.post("/api/upload-csv", response_model=UploadResponse)
