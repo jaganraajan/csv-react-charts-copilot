@@ -58,17 +58,15 @@ try:
         
         if langfuse_public_key and langfuse_secret_key:
             try:
+                # Set host environment variable for Langfuse client
+                os.environ["LANGFUSE_HOST"] = langfuse_host
+                
+                # Initialize CallbackHandler (credentials read from env vars)
                 langfuse_handler = CallbackHandler(
                     public_key=langfuse_public_key,
-                    secret_key=langfuse_secret_key,
-                    host=langfuse_host
+                    update_trace=True  # Include chain details in traces
                 )
-                # Test authentication
-                if langfuse_handler.auth_check():
-                    print("✓ Langfuse initialized successfully - tracing enabled")
-                else:
-                    print("⚠ Langfuse authentication failed - tracing disabled")
-                    langfuse_handler = None
+                print("✓ Langfuse initialized successfully - tracing enabled")
             except Exception as e:
                 print(f"⚠ Langfuse initialization failed: {e} - tracing disabled")
                 langfuse_handler = None
