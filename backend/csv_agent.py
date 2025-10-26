@@ -213,25 +213,24 @@ def query_csv_data(query: str, file_path: str = "") -> str:
 tools = [read_csv_tool, analyze_csv_column, query_csv_data]
 
 
-def create_agent(azure_endpoint: str, azure_api_key: str, azure_deployment: str):
+def create_agent():
     """
     Creates and returns a LangGraph agent with CSV tools.
-    
-    Args:
-        azure_endpoint: Azure OpenAI endpoint URL
-        azure_api_key: Azure OpenAI API key
-        azure_deployment: Azure OpenAI deployment name
     
     Returns:
         Compiled LangGraph agent
     """
-    
+    azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+    azure_api_key = os.getenv("AZURE_OPENAI_API_KEY")
+    azure_deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")
+    azure_api_version = os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-01")
+
     # Initialize Azure OpenAI LLM
     llm = AzureChatOpenAI(
         azure_endpoint=azure_endpoint,
         api_key=azure_api_key,
         azure_deployment=azure_deployment,
-        api_version="2024-02-15-preview",
+        api_version=azure_api_version,
         temperature=0.7,
     )
     
@@ -324,8 +323,10 @@ def run_agent(agent, user_message: str, csv_file_path: str = None) -> str:
         }
         
         # Run the agent
+        print('invoking agent...')
+        print(agent)
         result = agent.invoke(initial_state)
-        
+        print('agent invocation completed.')
         # Extract the final response
         final_message = result["messages"][-1]
         

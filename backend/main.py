@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 from pathlib import Path
 from csv_agent import create_agent, run_agent
+from openai import AzureOpenAI
 
 load_dotenv()
 
@@ -26,11 +27,11 @@ current_csv_file = None
 
 # Initialize LangGraph agent
 agent = None
+client = None
 try:
     azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
     azure_api_key = os.getenv("AZURE_OPENAI_API_KEY")
     azure_deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")
-
     azure_api_version = os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-01")
 
     client = AzureOpenAI(
@@ -38,6 +39,8 @@ try:
         api_key=azure_api_key,
         api_version=azure_api_version
     )
+    # Setup agent using create_agent
+    agent = create_agent()
 except Exception as e:
     print(f"Warning: Agent initialization failed: {e}")
 
@@ -100,12 +103,14 @@ async def chat(chat_message: ChatMessage):
     global current_csv_file
     
     if not agent:
+        print("Agent is not configured properly.")
         raise HTTPException(
             status_code=503,
             detail="Agent is not configured. Please set AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_KEY, and AZURE_OPENAI_DEPLOYMENT_NAME environment variables."
         )
     
     try:
+        print(f"Received message: {chat_message.message}")
         # Run the agent with the user message
         response = run_agent(agent, chat_message.message, current_csv_file)
         
