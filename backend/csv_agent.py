@@ -6,7 +6,7 @@ that integrates Azure OpenAI LLM with tool binding for CSV file operations.
 """
 
 from typing import TypedDict, Annotated, Sequence
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMessage
+from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMessage, SystemMessage
 from langchain_openai import AzureChatOpenAI
 from langchain_core.tools import tool
 from langgraph.graph import StateGraph, END
@@ -237,28 +237,26 @@ def create_agent():
     # Bind tools to the LLM
     llm_with_tools = llm.bind_tools(tools)
     
-    # Define the agent node
+    # Agent node: only adds SystemMessage, HumanMessage, or AIMessage
     def agent_node(state: AgentState) -> AgentState:
-        """Agent node that processes messages and decides on tool usage."""
         messages = state["messages"]
         csv_file_path = state.get("csv_file_path", "")
-        
-        # Add system message with context about available tools
+
         system_message = (
             "You are a helpful assistant that can analyze CSV files. "
             "You have access to tools to read CSV files, analyze specific columns, and query data. "
             "When a user asks about CSV data, use the appropriate tool to help them. "
             f"The current CSV file path is: {csv_file_path or 'demo_data.csv (default)'}"
         )
-        
-        # Create messages list with system context
-        messages_with_system = [HumanMessage(content=system_message)] + list(messages)
-        
-        # Get response from LLM
+
+        # Only add system message if not present
+        if not messages or not isinstance(messages[0], SystemMessage):
+            messages_with_system = [SystemMessage(content=system_message)] + list(messages)
+        else:
+            messages_with_system = list(messages)
+
         response = llm_with_tools.invoke(messages_with_system)
-        
-        # Return updated state with new message
-        return {"messages": messages + [response]}
+        return {"messages": messages + [response], "csv_file_path": csv_file_path}
     
     # Define the routing function
     def should_continue(state: AgentState) -> str:
@@ -273,8 +271,31 @@ def create_agent():
         # Otherwise, end
         return "end"
     
-    # Create the tool node
-    tool_node = ToolNode(tools)
+    # Tool node: only adds ToolMessage in response to tool_calls
+    def tool_node(state: AgentState) -> AgentState:
+        messages = state["messages"]
+        csv_file_path = state.get("csv_file_path", "")
+        last_message = messages[-1]
+        # Only respond if last_message has tool_calls
+        if hasattr(last_message, "tool_calls") and last_message.tool_calls:
+            tool_messages = []
+            for call in last_message.tool_calls:
+                tool_name = call["name"]
+                tool_args = call["args"]
+                # Find the tool by name
+                tool_func = next((t for t in tools if t.name == tool_name), None)
+                if tool_func:
+                    # Always add file_path to tool_args if not present
+                    tool_args_with_path = dict(tool_args)
+                    if "file_path" not in tool_args_with_path:
+                        tool_args_with_path["file_path"] = csv_file_path
+                    result = tool_func.invoke(tool_args_with_path)
+                else:
+                    result = f"Tool '{tool_name}' not found."
+                tool_messages.append(ToolMessage(content=result, tool_call_id=call["id"]))
+            return {"messages": messages + tool_messages, "csv_file_path": csv_file_path}
+        # If no tool_calls, just return state
+        return state
     
     # Build the graph
     workflow = StateGraph(AgentState)
