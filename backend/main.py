@@ -24,13 +24,14 @@ try:
     azure_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
     azure_api_key = os.getenv("AZURE_OPENAI_API_KEY")
     azure_deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")
-    
-    if azure_endpoint and azure_api_key:
-        client = AzureOpenAI(
-            azure_endpoint=azure_endpoint,
-            api_key=azure_api_key,
-            api_version="2024-02-15-preview"
-        )
+
+    azure_api_version = os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-01")
+
+    client = AzureOpenAI(
+        azure_endpoint=azure_endpoint,
+        api_key=azure_api_key,
+        api_version=azure_api_version
+    )
 except Exception as e:
     print(f"Warning: Azure OpenAI client initialization failed: {e}")
 
