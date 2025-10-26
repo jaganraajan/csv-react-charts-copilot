@@ -1,0 +1,16 @@
+product,category,price,quantity_sold,revenue,rating,region
+Laptop,Electronics,999.99,45,44999.55,4.5,North
+Smartphone,Electronics,599.99,120,71998.80,4.7,South
+Headphones,Electronics,149.99,230,34497.70,4.3,East
+Monitor,Electronics,299.99,67,20099.33,4.6,West
+Keyboard,Electronics,79.99,156,12478.44,4.4,North
+Mouse,Electronics,39.99,189,7558.11,4.2,South
+Tablet,Electronics,449.99,78,35099.22,4.5,East
+Desk,Furniture,249.99,34,8499.66,4.1,West
+Chair,Furniture,199.99,56,11199.44,4.4,North
+Bookshelf,Furniture,149.99,23,3449.77,4.2,South
+Lamp,Furniture,49.99,145,7248.55,4.3,East
+Pen,Stationery,2.99,890,2661.10,4.0,West
+Notebook,Stationery,5.99,567,3396.33,4.1,North
+Pencil,Stationery,1.99,678,1349.22,3.9,South
+Eraser,Stationery,0.99,423,418.77,3.8,East
