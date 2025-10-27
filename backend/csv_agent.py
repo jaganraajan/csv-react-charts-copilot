@@ -49,7 +49,7 @@ def _get_csv_path(file_path: str = "") -> str:
         Valid CSV file path.
     """
     if not file_path or not os.path.exists(file_path):
-        return os.path.join(os.path.dirname(__file__), "demo_data.csv")
+        return os.path.join(os.path.dirname(__file__), "../finance.csv")
     return file_path
 
 
